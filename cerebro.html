@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CEREBRO // Cover Colour Scan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07051a; --ink:#e9e6ff; --dim:#8b84c9; --yel:#ffd23f; --mag:#ff3d81; --cyn:#5ff0ff; --line:#3b2f8f;
+  --pix:'Press Start 2P',ui-monospace,Menlo,Consolas,monospace;
+  --term:'VT323',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--term);font-size:19px;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 30%,#1a1055 0%,#07051a 70%)}
+button,input{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr) 340px;grid-template-rows:minmax(0,1fr) auto;gap:12px;height:100vh;padding:12px}
+.panel{position:relative;border:3px solid var(--line);background:linear-gradient(180deg,rgba(26,18,78,.88),rgba(10,6,34,.94));box-shadow:5px 5px 0 #000,inset 0 0 0 2px rgba(255,255,255,.05),0 0 26px rgba(58,91,255,.22);padding:14px;overflow:auto}
+h1{font-family:var(--pix);font-size:24px;margin:2px 0 6px;color:var(--yel);letter-spacing:1px;text-shadow:3px 3px 0 #b01f5e,6px 6px 0 #000}
+h1 em{font-style:normal;color:var(--cyn)}
+.sub{font-family:var(--pix);font-size:8px;color:var(--dim);margin:0 0 14px;letter-spacing:1px}
+h2{font-family:var(--pix);font-size:9px;font-weight:400;color:var(--yel);margin:16px 0 8px;letter-spacing:1px}
+h2::before{content:"\25B8  ";color:var(--mag)}
+section:first-of-type h2{margin-top:4px}
+.btn{display:block;width:100%;margin:0 0 6px;padding:9px 10px;font-family:var(--pix);font-size:8px;line-height:1.4;text-align:left;letter-spacing:.5px;background:#1b1450;border:2px solid var(--line);box-shadow:3px 3px 0 #000;cursor:pointer;color:var(--ink)}
+.btn:hover{border-color:var(--cyn)}
+.btn.on{background:var(--yel);color:#150a3a;border-color:#fff}
+.btn:focus-visible,.fam:focus-visible,.thumb:focus-visible,input:focus-visible{outline:2px solid var(--cyn);outline-offset:2px}
+.tog{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tog .btn{margin:0;text-align:center}
+label.btn{text-align:center}
+.fams{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.fam{display:flex;align-items:center;gap:6px;padding:3px 6px;background:#150f42;border:2px solid #2b2275;cursor:pointer;font-size:18px;line-height:1.1;text-align:left}
+.fam i{width:13px;height:13px;flex:none;border:1px solid rgba(255,255,255,.55)}
+.fam span{flex:1}.fam b{font-weight:400;color:var(--dim)}
+.fam.on{background:var(--mag);border-color:#fff;color:#fff}.fam.on b{color:#fff}
+.sl{display:block;margin-top:10px;font-size:17px;color:var(--dim)}.sl b{color:var(--yel);font-weight:400}
+.sl input{display:block;width:100%;accent-color:var(--yel);margin-top:4px}
+#find{display:flex;gap:6px}#find .btn{width:64px;margin:0;text-align:center}
+#q{flex:1;min-width:0;background:#0b0730;border:2px solid var(--line);padding:4px 8px;font-size:22px;color:var(--yel)}
+#meta{margin:0 0 8px;color:var(--dim);font-size:17px;line-height:1.1}
+.stage{padding:0;overflow:hidden;min-height:300px}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.ov{position:absolute;font-size:18px;color:var(--cyn);pointer-events:none;text-shadow:0 0 6px rgba(95,240,255,.6);line-height:1.1;max-width:46%}
+.ov small{display:block;color:var(--dim);font-size:16px;text-shadow:none}
+.tl{left:12px;top:10px}.tr{right:12px;top:10px;text-align:right}.bl{left:12px;bottom:8px;color:var(--dim);text-shadow:none;font-size:16px}.br{right:12px;bottom:8px;text-align:right}
+.shotbox{position:relative;height:min(40vh,400px);aspect-ratio:2/3;margin:0 auto 10px;background:#000;border:3px solid var(--line);box-shadow:4px 4px 0 #000}
+.shotbox.lock{border-color:var(--mag);box-shadow:4px 4px 0 #000,0 0 18px rgba(255,61,129,.55)}
+.shotbox img{width:100%;height:100%;object-fit:contain;display:block}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;font-family:var(--pix);font-size:9px;line-height:1.7;color:var(--dim)}
+.ph small{font-family:var(--term);font-size:17px;margin-top:8px}
+.idline{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#iss{font-family:var(--pix);font-size:16px;color:var(--yel);text-shadow:2px 2px 0 #000}
+#fn{color:var(--dim);font-size:17px}
+#dom{color:var(--cyn);font-size:17px;margin:4px 0 8px}
+.pbar{display:flex;height:22px;border:2px solid #000;outline:1px solid var(--line);margin-bottom:8px;background:#000}
+.pbar i{min-width:1px}
+.row{display:grid;grid-template-columns:14px 66px 1fr 52px;align-items:center;gap:7px;font-size:17px;line-height:1.25}
+.row i{width:14px;height:14px;border:1px solid rgba(255,255,255,.5)}
+.row b{font-weight:400;color:var(--ink)}
+.row em{font-style:normal;text-align:right;color:var(--dim)}
+.meter{height:8px;background:#0b0730;border:1px solid #2b2275}.meter u{display:block;height:100%}
+.sim{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumb{position:relative;padding:0;border:2px solid var(--line);background:#000;cursor:pointer;aspect-ratio:2/3;overflow:hidden}
+.thumb:hover{border-color:var(--yel)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb span{position:absolute;left:0;right:0;bottom:0;background:rgba(7,5,26,.85);font-size:16px;padding:0 3px;text-align:center;color:var(--yel)}
+.dim{color:var(--dim);font-size:17px;margin:0;line-height:1.1}
+.foot{grid-column:1/-1;display:grid;gap:7px}
+.spec{display:flex;height:30px;border:3px solid var(--line);background:#000;box-shadow:4px 4px 0 #000}
+.spec button{border:0;border-right:1px solid rgba(0,0,0,.5);padding:0 4px;overflow:hidden;white-space:nowrap;cursor:pointer;font-size:17px;min-width:0}
+.spec button.on{outline:3px solid var(--mag);outline-offset:-3px}
+.tick{overflow:hidden;white-space:nowrap;font-size:17px;color:var(--dim);border-top:2px dashed var(--line);padding-top:4px}
+.tick span{display:inline-block;padding-left:100%;animation:tk 90s linear infinite}
+@keyframes tk{to{transform:translateX(-100%)}}
+.loader{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(5,3,20,.92);padding:20px}
+.loader .box{max-width:520px;border:3px solid var(--yel);background:#10093a;padding:24px;box-shadow:6px 6px 0 #000,0 0 30px rgba(255,210,63,.3);text-align:center}
+.loader h3{font-family:var(--pix);font-size:14px;color:var(--yel);margin:0 0 14px;line-height:1.6}
+.loader p{margin:0 0 14px;font-size:20px;color:var(--ink);line-height:1.15}
+.loader .btn{display:inline-block;width:auto;text-align:center;padding:12px 16px;font-size:10px}
+#lmsg{color:var(--mag)}
+.crt{position:fixed;inset:0;z-index:60;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.55) 100%);animation:fl 5s infinite}
+.crt.off{display:none}
+@keyframes fl{0%,100%{opacity:.92}48%{opacity:1}52%{opacity:.85}}
+@media (prefers-reduced-motion:reduce){.crt{animation:none}.tick span{animation:none;padding-left:0}}
+@media (max-width:1050px){
+  html,body{overflow:auto}
+  .app{grid-template-columns:1fr;height:auto}
+  .stage{order:1;height:80vw;min-height:420px;max-height:80vh}.right{order:2}.left{order:3}.foot{order:4}
+  .shotbox{height:min(60vw,420px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel left">
+    <h1>CERE<em>BRO</em></h1>
+    <p class="sub">COVER COLOUR SCAN</p>
+    <section><h2>VIEW</h2>
+      <button class="btn on" data-mode="wheel">HUE X SATURATION</button>
+      <button class="btn" data-mode="light">HUE X LIGHTNESS</button>
+      <button class="btn" data-mode="spiral">ISSUE ORDER</button>
+    </section>
+    <section><h2>DISPLAY</h2>
+      <div class="tog">
+        <button class="btn" id="tPal">PALETTE NODES</button>
+        <button class="btn on" id="tSweep">SWEEP</button>
+        <button class="btn on" id="tCrt">CRT FX</button>
+      </div>
+    </section>
+    <section><h2>DETECT COLOUR</h2>
+      <div class="fams" id="fams"></div>
+      <label class="sl">MIN SHARE OF COVER <b id="thrV">15%</b><input type="range" id="thr" min="5" max="60" value="15"></label>
+    </section>
+    <section><h2>FIND ISSUE</h2>
+      <form id="find"><input id="q" type="number" min="1" placeholder="#" aria-label="Issue number"><button class="btn" type="submit">GO</button></form>
+    </section>
+    <section><h2>DATA</h2>
+      <p id="meta">NO DATA LOADED</p>
+      <label class="btn" for="file">LOAD JSON</label><input type="file" id="file" accept=".json,application/json" hidden>
+    </section>
+  </aside>
+
+  <main class="panel stage" id="stage">
+    <canvas id="cv" role="img" aria-label="Polar scatter plot: one blip per cover, coloured by its dominant colour"></canvas>
+    <div class="ov tl" id="ovMode"></div>
+    <div class="ov tr" id="ovSig"></div>
+    <div class="ov bl">HOVER = TRACE &middot; CLICK = LOCK &middot; &larr;/&rarr; = STEP &middot; ESC = CLEAR</div>
+    <div class="ov br" id="ovNote"></div>
+  </main>
+
+  <aside class="panel right">
+    <h2 id="lockH" style="margin-top:4px">AWAITING TARGET</h2>
+    <div class="shotbox" id="box"><img id="shot" alt="" hidden><div class="ph" id="ph"></div></div>
+    <div class="idline"><b id="iss">&mdash;</b><span id="fn"></span></div>
+    <div id="dom"></div>
+    <div class="pbar" id="pbar"></div>
+    <div id="plist"></div>
+    <h2 id="simH">NEAREST PALETTES</h2>
+    <div class="sim" id="sim"></div>
+  </aside>
+
+  <footer class="foot">
+    <div class="spec" id="spec" aria-label="Archive-wide colour spectrum"></div>
+    <div class="tick"><span id="tickT">STANDING BY&hellip;</span></div>
+  </footer>
+</div>
+
+<div class="loader" id="loader" hidden>
+  <div class="box">
+    <h3>INSERT DATA DISC</h3>
+    <p>Pick <b>xmen_colours.json</b> (or drop it anywhere on this page).<br>Cover images load from the <b>website_images</b> folder, so keep this HTML file next to it.</p>
+    <p id="lmsg"></p>
+    <label class="btn" for="file">CHOOSE JSON FILE</label>
+  </div>
+</div>
+<div class="crt" id="crt"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const TAU = Math.PI * 2, REF = 320, TURNS = 11;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SWEEP_SPEED = RM ? 0.25 : 0.7;
+
+const FAMS = ['RED','ORANGE','YELLOW','GREEN','CYAN','BLUE','PURPLE','MAGENTA','GREY','SHADOW','PAPER'];
+const MODES = {
+  wheel:  { label: 'HUE X SATURATION', note: 'ANGLE = HUE / DISTANCE = SATURATION' },
+  light:  { label: 'HUE X LIGHTNESS',  note: 'ANGLE = HUE / DISTANCE = LIGHTNESS' },
+  spiral: { label: 'ISSUE ORDER',      note: 'CENTRE = EARLIEST / RIM = LATEST' }
+};
+
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let items = [], N = 0, cx, cy, rr, match, matched = 0, from, to, tStart = 0, tDur = 800;
+let mode = 'wheel', pal = false, famSel = -1, thr = 15, sweepOn = true;
+let hover = -1, sel = -1, similar = [], shown = -2, sweepA = 0, last = 0;
+let W = 0, H = 0, CX = 0, CY = 0, R = 100, DPR = 1, K = 1;
+let layouts = {}, famTot = [], famRGB = [], maxIssue = 0;
+
+function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+/* ---------- colour helpers ---------- */
+function famOf(h, s, l) {
+  if (l <= 18) return 9;
+  if (l >= 84) return 10;
+  if (s < 14) return 8;
+  if (h < 15 || h >= 345) return 0;
+  if (h < 40) return 1;
+  if (h < 70) return 2;
+  if (h < 165) return 3;
+  if (h < 200) return 4;
+  if (h < 255) return 5;
+  if (h < 300) return 6;
+  return 7;
+}
+function labOf(r, g, b) {
+  const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const R_ = f(r), G = f(g), B = f(b);
+  let X = (R_ * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047, Y = R_ * 0.2126 + G * 0.7152 + B * 0.0722, Z = (R_ * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+  const t = v => v > 0.008856 ? Math.cbrt(v) : 7.787 * v + 16 / 116;
+  X = t(X); Y = t(Y); Z = t(Z);
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+}
+const baseDot = it => 3.6 + 4.6 * Math.min(1, it.dom.pct / 55);
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ---------- layouts ---------- */
+function relax(X, Y) {
+  const n = X.length, rnd = rng(7), tx = new Float32Array(n), ty = new Float32Array(n), rad = new Float32Array(n);
+  for (let i = 0; i < n; i++) { X[i] += (rnd() - .5) * .004; Y[i] += (rnd() - .5) * .004; tx[i] = X[i]; ty[i] = Y[i]; rad[i] = (baseDot(items[i]) + 1.6) / REF; }
+  for (let k = 0; k < 140; k++) {
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const dx = X[j] - X[i], dy = Y[j] - Y[i], min = rad[i] + rad[j], d2 = dx * dx + dy * dy;
+      if (d2 >= min * min) continue;
+      const d = Math.sqrt(d2) || 1e-4, push = (min - d) * 0.5 / d;
+      X[i] -= dx * push; Y[i] -= dy * push; X[j] += dx * push; Y[j] += dy * push;
+    }
+    for (let i = 0; i < n; i++) {
+      X[i] += (tx[i] - X[i]) * 0.02; Y[i] += (ty[i] - Y[i]) * 0.02;
+      const r = Math.hypot(X[i], Y[i]); if (r > 0.97) { X[i] *= 0.97 / r; Y[i] *= 0.97 / r; }
+    }
+  }
+}
+function getLayout(m) {
+  if (layouts[m]) return layouts[m];
+  const X = new Float32Array(N), Y = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const [h, s, l] = items[i].dom.hsl; let a, r;
+    if (m === 'wheel') { a = (h - 90) * Math.PI / 180; r = 0.10 + 0.88 * Math.sqrt(s / 100); }
+    else if (m === 'light') { a = (h - 90) * Math.PI / 180; r = 0.08 + 0.90 * (l / 100); }
+    else { const f = N > 1 ? i / (N - 1) : 0, sq = Math.sqrt(f); a = sq * TAU * TURNS - Math.PI / 2; r = 0.04 + 0.93 * sq; }
+    X[i] = Math.cos(a) * r; Y[i] = Math.sin(a) * r;
+  }
+  if (m !== 'spiral') relax(X, Y);
+  return (layouts[m] = { X, Y });
+}
+
+/* ---------- data ---------- */
+function ingest(json, name) {
+  const list = Array.isArray(json) ? json : (json && json.covers);
+  if (!Array.isArray(list) || !list.length) throw new Error('No "covers" array found in that file.');
+  const arr = [];
+  list.forEach((c, k) => {
+    if (!c || !c.dominant || !Array.isArray(c.palette) || !c.palette.length) return;
+    const issue = parseInt(c.filename, 10);
+    const pal_ = c.palette.map(p => ({ hex: p.hex, rgb: p.rgb, hsl: p.hsl, pct: +p.percentage || +p.pct || 0, lab: labOf(p.rgb[0], p.rgb[1], p.rgb[2]) }));
+    const sum = pal_.reduce((a, p) => a + p.pct, 0) || 1;
+    const shares = new Float32Array(11);
+    pal_.forEach(p => { p.fam = famOf(p.hsl[0], p.hsl[1], p.hsl[2]); shares[p.fam] += p.pct / sum; });
+    const d = c.dominant;
+    arr.push({ file: c.filename, path: c.path || ('website_images/' + c.filename), issue: isNaN(issue) ? k + 1 : issue,
+      dom: { hex: d.hex, rgb: d.rgb, hsl: d.hsl, pct: +d.percentage || +d.pct || 0 }, pal: pal_, sum, shares, domFam: famOf(d.hsl[0], d.hsl[1], d.hsl[2]) });
+  });
+  if (!arr.length) throw new Error('No usable covers in that file.');
+  arr.sort((a, b) => a.issue - b.issue || String(a.file).localeCompare(String(b.file)));
+  items = arr; N = arr.length; maxIssue = arr[N - 1].issue;
+  cx = new Float32Array(N); cy = new Float32Array(N); match = new Uint8Array(N);
+  famTot = new Array(11).fill(0); const rgbSum = Array.from({ length: 11 }, () => [0, 0, 0]);
+  items.forEach(it => it.pal.forEach(p => { const w = p.pct; famTot[p.fam] += w; for (let k = 0; k < 3; k++) rgbSum[p.fam][k] += p.rgb[k] * w; }));
+  famRGB = famTot.map((t, f) => t > 0 ? rgbSum[f].map(v => Math.round(v / t)) : [90, 90, 120]);
+  layouts = {}; hover = -1; sel = -1; similar = []; famSel = -1; shown = -2;
+  from = { X: new Float32Array(N), Y: new Float32Array(N) };
+  to = getLayout(mode); tStart = performance.now(); tDur = RM ? 1 : 1400;
+  resize(); buildFams(); updateMatch(); buildSpec(); renderSim(); setModeUI();
+  $('#meta').textContent = N + ' COVERS \u00B7 ' + name;
+  const totAll = famTot.reduce((a, b) => a + b, 0), top = famTot.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  const t = 'CEREBRO ONLINE \u25AA ' + N + ' SIGNALS ACQUIRED \u25AA ISSUES #' + items[0].issue + ' TO #' + maxIssue +
+    ' \u25AA ARCHIVE LEANS ' + FAMS[top[0][1]] + ' (' + Math.round(top[0][0] / totAll * 100) + '%) THEN ' + FAMS[top[1][1]] + ' (' + Math.round(top[1][0] / totAll * 100) + '%)' +
+    ' \u25AA ' + (N * 8) + ' PALETTE SAMPLES INDEXED \u25AA ';
+  $('#tickT').textContent = t + t;
+  $('#loader').hidden = true;
+}
+async function boot() {
+  try {
+    const r = await fetch('xmen_colours.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('not found');
+    ingest(await r.json(), 'xmen_colours.json');
+  } catch (e) { $('#loader').hidden = false; }
+}
+async function handleFile(f) {
+  try { ingest(JSON.parse(await f.text()), f.name); }
+  catch (err) { $('#lmsg').textContent = 'COULD NOT READ FILE: ' + err.message; $('#loader').hidden = false; }
+}
+
+/* ---------- UI state ---------- */
+function setMode(m) {
+  if (m === mode || !N) return;
+  const nx = new Float32Array(cx), ny = new Float32Array(cy);
+  from = { X: nx, Y: ny }; to = getLayout(m); mode = m; tStart = performance.now(); tDur = RM ? 1 : 850; setModeUI();
+}
+function setModeUI() {
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  $('#ovMode').textContent = '';
+  const a = el('span', null, 'VIEW \u25B8 ' + MODES[mode].label); const s = el('small', null, MODES[mode].note);
+  $('#ovMode').append(a, s);
+  $('#ovNote').textContent = mode === 'spiral' ? 'ONE BLIP PER COVER' : 'POSITIONS NUDGED TO AVOID OVERLAP';
+}
+function updateMatch() {
+  let c = 0;
+  for (let i = 0; i < N; i++) { const m = famSel < 0 || items[i].shares[famSel] * 100 >= thr; match[i] = m ? 1 : 0; c += m ? 1 : 0; }
+  matched = c;
+  $('#ovSig').textContent = 'SIGNALS \u25B8 ' + c + ' / ' + N;
+  document.querySelectorAll('.fam').forEach(b => {
+    const f = +b.dataset.f; let n = 0; for (let i = 0; i < N; i++) if (items[i].shares[f] * 100 >= thr) n++;
+    b.querySelector('b').textContent = n; b.classList.toggle('on', f === famSel); b.setAttribute('aria-pressed', f === famSel);
+  });
+  document.querySelectorAll('#spec button').forEach(b => b.classList.toggle('on', +b.dataset.f === famSel));
+  if (sel >= 0 && !match[sel]) { select(-1); }
+}
+function toggleFam(f) { famSel = famSel === f ? -1 : f; updateMatch(); }
+function buildFams() {
+  const box = $('#fams'); box.textContent = '';
+  FAMS.forEach((n, f) => {
+    const b = el('button', 'fam'); b.dataset.f = f; b.type = 'button';
+    const sw = el('i'); sw.style.background = 'rgb(' + famRGB[f].join(',') + ')';
+    b.append(sw, el('span', null, n), el('b', null, '0'));
+    b.onclick = () => toggleFam(f); box.appendChild(b);
+  });
+}
+function buildSpec() {
+  const bar = $('#spec'); bar.textContent = ''; const tot = famTot.reduce((a, b) => a + b, 0) || 1;
+  famTot.forEach((t, f) => {
+    const b = el('button'); b.dataset.f = f; b.type = 'button'; const pct = t / tot * 100;
+    b.style.flexGrow = t; b.style.flexBasis = '0'; const c = famRGB[f]; b.style.background = 'rgb(' + c.join(',') + ')';
+    b.style.color = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) > 140 ? '#150a3a' : '#fff';
+    b.title = FAMS[f] + ' ' + pct.toFixed(1) + '% of all palette pixels';
+    b.textContent = pct > 7 ? FAMS[f] + ' ' + Math.round(pct) + '%' : '';
+    b.onclick = () => toggleFam(f); bar.appendChild(b);
+  });
+}
+function palDist(a, b) {
+  let sa = 0, sb = 0;
+  for (const ca of a.pal) { let m = 1e9; for (const cb of b.pal) { const dl = ca.lab[0] - cb.lab[0], da = ca.lab[1] - cb.lab[1], db = ca.lab[2] - cb.lab[2], d = dl * dl + da * da + db * db; if (d < m) m = d; } sa += Math.sqrt(m) * ca.pct; }
+  for (const cb of b.pal) { let m = 1e9; for (const ca of a.pal) { const dl = ca.lab[0] - cb.lab[0], da = ca.lab[1] - cb.lab[1], db = ca.lab[2] - cb.lab[2], d = dl * dl + da * da + db * db; if (d < m) m = d; } sb += Math.sqrt(m) * cb.pct; }
+  return (sa / a.sum + sb / b.sum) / 2;
+}
+function computeSimilar(i) {
+  const out = []; for (let j = 0; j < N; j++) if (j !== i) out.push([palDist(items[i], items[j]), j]);
+  out.sort((a, b) => a[0] - b[0]); return out.slice(0, 6).map(x => x[1]);
+}
+function select(i) { sel = i; similar = i >= 0 ? computeSimilar(i) : []; shown = -2; renderSim(); }
+function renderSim() {
+  const box = $('#sim'); box.textContent = '';
+  if (sel < 0) { $('#simH').textContent = 'NEAREST PALETTES'; box.style.display = 'block'; box.appendChild(el('p', 'dim', 'CLICK A SIGNAL TO LOCK IT AND FIND THE COVERS WITH THE CLOSEST COLOUR PALETTE.')); return; }
+  box.style.display = ''; $('#simH').textContent = 'NEAREST TO #' + items[sel].issue;
+  similar.forEach(j => {
+    const b = el('button', 'thumb'); b.type = 'button'; b.title = 'Issue #' + items[j].issue;
+    const im = el('img'); im.loading = 'lazy'; im.alt = 'Cover ' + items[j].file; im.src = items[j].path; im.onerror = () => { im.style.display = 'none'; };
+    b.append(im, el('span', null, '#' + items[j].issue)); b.onclick = () => select(j); box.appendChild(b);
+  });
+}
+const PH_DEFAULT = 'NO TARGET';
+function renderPanel(i) {
+  const img = $('#shot'), ph = $('#ph'), box = $('#box');
+  if (i < 0) {
+    img.hidden = true; img.removeAttribute('src'); img.dataset.f = '';
+    ph.hidden = false; ph.textContent = PH_DEFAULT; ph.appendChild(el('small', null, 'HOVER A SIGNAL TO TRACE IT'));
+    $('#lockH').textContent = 'AWAITING TARGET'; box.classList.remove('lock');
+    $('#iss').textContent = '\u2014'; $('#fn').textContent = ''; $('#dom').textContent = ''; $('#pbar').textContent = ''; $('#plist').textContent = '';
+    return;
+  }
+  const it = items[i];
+  $('#lockH').textContent = i === sel ? 'TARGET LOCKED' : 'TRACKING\u2026'; box.classList.toggle('lock', i === sel);
+  if (img.dataset.f !== it.path) { img.dataset.f = it.path; img.alt = 'Cover ' + it.file; img.src = it.path; }
+  $('#iss').textContent = '#' + it.issue; $('#fn').textContent = it.file;
+  const d = it.dom; $('#dom').textContent = 'DOMINANT ' + d.hex.toUpperCase() + ' \u00B7 H' + Math.round(d.hsl[0]) + ' S' + Math.round(d.hsl[1]) + ' L' + Math.round(d.hsl[2]) + ' \u00B7 ' + FAMS[it.domFam];
+  const pb = $('#pbar'); pb.textContent = ''; const pl = $('#plist'); pl.textContent = '';
+  const mx = Math.max(...it.pal.map(p => p.pct)) || 1;
+  it.pal.forEach(c => {
+    const s = el('i'); s.style.flexGrow = c.pct; s.style.flexBasis = '0'; s.style.background = c.hex; s.title = c.hex + ' ' + c.pct.toFixed(1) + '%'; pb.appendChild(s);
+    const r = el('div', 'row'), sw = el('i'); sw.style.background = c.hex;
+    const m = el('span', 'meter'), u = el('u'); u.style.width = (c.pct / mx * 100) + '%'; u.style.background = c.hex; m.appendChild(u);
+    r.append(sw, el('b', null, c.hex.toUpperCase()), m, el('em', null, c.pct.toFixed(1) + '%')); pl.appendChild(r);
+  });
+}
+$('#shot').onerror = () => { $('#shot').hidden = true; const ph = $('#ph'); ph.hidden = false; ph.textContent = 'IMAGE NOT FOUND'; ph.appendChild(el('small', null, 'KEEP THIS HTML NEXT TO THE website_images FOLDER')); };
+$('#shot').onload = () => { $('#shot').hidden = false; $('#ph').hidden = true; };
+
+/* ---------- canvas ---------- */
+function resize() {
+  const r = cv.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W * DPR)); cv.height = Math.max(1, Math.round(H * DPR));
+  CX = W / 2; CY = H / 2; R = Math.max(110, Math.min(W, H) / 2 - 36); K = Math.max(.7, Math.min(1.35, R / REF));
+  rr = new Float32Array(N); for (let i = 0; i < N; i++) rr[i] = baseDot(items[i]) * K;
+}
+function ringDefs() {
+  if (mode === 'wheel') return [10, 25, 50, 75, 100].map(s => ({ r: .10 + .88 * Math.sqrt(s / 100), t: 'S' + s }));
+  if (mode === 'light') return [20, 40, 60, 80, 100].map(l => ({ r: .08 + .90 * l / 100, t: 'L' + l }));
+  return [100, 200, 300, 400].filter(n => n < maxIssue).map(n => { const idx = items.findIndex(it => it.issue >= n), f = idx / (N - 1); return { r: .04 + .93 * Math.sqrt(f), t: '~#' + n }; });
+}
+function drawGrid() {
+  const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, R + 14);
+  g.addColorStop(0, '#1d1459'); g.addColorStop(.7, '#0f0a34'); g.addColorStop(1, '#080520');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX, CY, R + 14, 0, TAU); ctx.fill();
+  ctx.lineWidth = 10;
+  if (mode !== 'spiral') {
+    for (let k = 0; k < 72; k++) { ctx.strokeStyle = 'hsl(' + (k * 5 + 2.5) + ',85%,55%)'; ctx.beginPath(); ctx.arc(CX, CY, R + 9, (k * 5 - 90) * Math.PI / 180 - .012, ((k + 1) * 5 - 90) * Math.PI / 180 + .012); ctx.stroke(); }
+  } else { ctx.strokeStyle = '#2a2070'; ctx.beginPath(); ctx.arc(CX, CY, R + 9, 0, TAU); ctx.stroke(); }
+  ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.arc(CX, CY, R + 14, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(CX, CY, R + 4, 0, TAU); ctx.stroke();
+  ctx.lineWidth = 1;
+  for (let d = 0; d < 360; d += 5) {
+    const a = (d - 90) * Math.PI / 180, long = d % 30 === 0, r0 = R - (long ? 9 : 4);
+    ctx.strokeStyle = long ? 'rgba(210,200,255,.65)' : 'rgba(200,190,255,.3)';
+    ctx.beginPath(); ctx.moveTo(CX + Math.cos(a) * r0, CY + Math.sin(a) * r0); ctx.lineTo(CX + Math.cos(a) * R, CY + Math.sin(a) * R); ctx.stroke();
+    if (long) { ctx.strokeStyle = 'rgba(130,120,255,.16)'; ctx.beginPath(); ctx.moveTo(CX + Math.cos(a) * R * .05, CY + Math.sin(a) * R * .05); ctx.lineTo(CX + Math.cos(a) * r0, CY + Math.sin(a) * r0); ctx.stroke(); }
+  }
+  ctx.font = '15px VT323,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ringDefs().forEach(rg => {
+    ctx.strokeStyle = 'rgba(130,120,255,.30)'; ctx.beginPath(); ctx.arc(CX, CY, rg.r * R, 0, TAU); ctx.stroke();
+    ctx.fillStyle = 'rgba(200,190,255,.6)'; ctx.fillText(rg.t, CX + 4, CY - rg.r * R - 3);
+  });
+  if (mode !== 'spiral') {
+    ctx.font = '17px VT323,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    [['RED', 0], ['YEL', 60], ['GRN', 120], ['CYN', 180], ['BLU', 240], ['MAG', 300]].forEach(([n, h]) => {
+      const a = (h - 90) * Math.PI / 180; ctx.fillStyle = 'hsl(' + h + ',90%,68%)'; ctx.fillText(n, CX + Math.cos(a) * (R + 27), CY + Math.sin(a) * (R + 27));
+    });
+  }
+  ctx.strokeStyle = 'rgba(95,240,255,.5)'; ctx.beginPath(); ctx.moveTo(CX - 7, CY); ctx.lineTo(CX + 7, CY); ctx.moveTo(CX, CY - 7); ctx.lineTo(CX, CY + 7); ctx.stroke();
+}
+function drawSweep() {
+  if (!sweepOn) return;
+  if (ctx.createConicGradient) {
+    const sp = 1.3, g = ctx.createConicGradient(sweepA - sp, CX, CY);
+    g.addColorStop(0, 'rgba(95,240,255,0)'); g.addColorStop(sp / TAU, 'rgba(95,240,255,.30)'); g.addColorStop(Math.min(.999, sp / TAU + .002), 'rgba(95,240,255,0)'); g.addColorStop(1, 'rgba(95,240,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX, CY, R, 0, TAU); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(180,255,255,.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX + Math.cos(sweepA) * R, CY + Math.sin(sweepA) * R); ctx.stroke();
+}
+function drawLinks(ts) {
+  if (sel < 0 || !similar.length) return;
+  const sx = CX + cx[sel] * R, sy = CY + cy[sel] * R;
+  ctx.save(); ctx.setLineDash([5, 5]); ctx.lineDashOffset = -ts / 60; ctx.strokeStyle = 'rgba(255,61,129,.75)'; ctx.lineWidth = 1.5;
+  similar.forEach(j => { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(CX + cx[j] * R, CY + cy[j] * R); ctx.stroke(); });
+  ctx.setLineDash([]); similar.forEach(j => { ctx.beginPath(); ctx.arc(CX + cx[j] * R, CY + cy[j] * R, rr[j] + 4, 0, TAU); ctx.stroke(); });
+  ctx.restore();
+}
+function drawBlips() {
+  const filt = famSel >= 0;
+  for (let pass = filt ? 0 : 1; pass < 2; pass++) {
+    ctx.globalAlpha = pass ? 1 : .13;
+    for (let i = 0; i < N; i++) {
+      if (match[i] !== pass) continue;
+      const it = items[i], x = CX + cx[i] * R, y = CY + cy[i] * R, r = rr[i];
+      if (pal) {
+        let a0 = -Math.PI / 2; const rp = r * 1.3;
+        for (const c of it.pal) { const a1 = a0 + TAU * c.pct / it.sum; ctx.fillStyle = c.hex; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, rp, a0, a1); ctx.closePath(); ctx.fill(); a0 = a1; }
+        ctx.beginPath(); ctx.arc(x, y, rp, 0, TAU);
+      } else { ctx.fillStyle = it.dom.hex; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.stroke();
+      if (pass && sweepOn) {
+        let d = (sweepA - Math.atan2(y - CY, x - CX)) % TAU; if (d < 0) d += TAU;
+        if (d < 1.3) { const g = 1 - d / 1.3; ctx.strokeStyle = 'rgba(190,255,255,' + (.9 * g) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r * (pal ? 1.3 : 1) + 2 + g * 5, 0, TAU); ctx.stroke(); }
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function tag(x, y, s, col) {
+  ctx.font = '19px VT323,monospace'; const w = ctx.measureText(s).width + 12; let bx = x + 14, by = y - 30;
+  if (bx + w > W - 4) bx = x - 14 - w; if (by < 4) by = y + 12;
+  ctx.fillStyle = 'rgba(8,5,32,.93)'; ctx.fillRect(bx, by, w, 22); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(bx, by, w, 22);
+  ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(s, bx + 6, by + 12);
+}
+function drawFocus(ts) {
+  const t = ts / 1000;
+  const one = (i, col, big) => {
+    const x = CX + cx[i] * R, y = CY + cy[i] * R, r = rr[i] * (pal ? 1.3 : 1);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(t * (big ? 1.2 : -1.6)); ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+    const d = r + 7 + (big ? Math.sin(t * 5) * 1.5 : 0);
+    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(0, 0, d, k * Math.PI / 2 + .2, k * Math.PI / 2 + Math.PI / 2 - .2); ctx.stroke(); }
+    ctx.restore();
+  };
+  if (sel >= 0) one(sel, '#ff3d81', true);
+  if (hover >= 0 && hover !== sel) one(hover, '#ffd23f', false);
+  const lab = hover >= 0 ? hover : sel;
+  if (lab >= 0) tag(CX + cx[lab] * R, CY + cy[lab] * R, '#' + items[lab].issue, lab === hover ? '#ffd23f' : '#ff3d81');
+}
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (!N || !W) return;
+  const dt = Math.min(.05, (ts - last) / 1000 || 0); last = ts;
+  if (sweepOn) sweepA = (sweepA + dt * SWEEP_SPEED) % TAU;
+  const p = Math.max(0, Math.min(1, (ts - tStart) / tDur)), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  for (let i = 0; i < N; i++) { cx[i] = from.X[i] + (to.X[i] - from.X[i]) * e; cy[i] = from.Y[i] + (to.Y[i] - from.Y[i]) * e; }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+  drawGrid(); drawSweep(); drawLinks(ts); drawBlips(); drawFocus(ts);
+  const want = hover >= 0 ? hover : sel;
+  if (want !== shown) { shown = want; renderPanel(want); }
+}
+
+/* ---------- interaction ---------- */
+function pick(x, y) {
+  let best = -1, bd = 1e9;
+  for (let i = 0; i < N; i++) {
+    if (!match[i]) continue;
+    const dx = CX + cx[i] * R - x, dy = CY + cy[i] * R - y, d = Math.hypot(dx, dy);
+    if (d < rr[i] * (pal ? 1.3 : 1) * 1.35 + 4 && d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); hover = N ? pick(e.clientX - r.left, e.clientY - r.top) : -1; cv.style.cursor = hover >= 0 ? 'pointer' : 'crosshair'; });
+cv.addEventListener('pointerleave', () => { hover = -1; });
+cv.addEventListener('click', e => { if (!N) return; const r = cv.getBoundingClientRect(); select(pick(e.clientX - r.left, e.clientY - r.top)); });
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+$('#tPal').onclick = e => { pal = !pal; e.currentTarget.classList.toggle('on', pal); };
+$('#tSweep').onclick = e => { sweepOn = !sweepOn; e.currentTarget.classList.toggle('on', sweepOn); };
+$('#tCrt').onclick = e => { const on = e.currentTarget.classList.toggle('on'); $('#crt').classList.toggle('off', !on); };
+$('#thr').oninput = e => { thr = +e.target.value; $('#thrV').textContent = thr + '%'; if (N) updateMatch(); };
+$('#find').onsubmit = e => {
+  e.preventDefault(); const n = parseInt($('#q').value, 10); if (!N || isNaN(n)) return;
+  const i = items.findIndex(it => it.issue === n);
+  if (i < 0) { $('#meta').textContent = 'ISSUE #' + n + ' NOT IN DATA'; return; }
+  if (!match[i]) { famSel = -1; updateMatch(); }
+  select(i);
+};
+$('#file').onchange = e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; };
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) handleFile(f); });
+addEventListener('keydown', e => {
+  if (!N || (e.target && e.target.tagName === 'INPUT')) return;
+  if (e.key === 'Escape') { famSel = -1; updateMatch(); select(-1); return; }
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  e.preventDefault(); const d = e.key === 'ArrowRight' ? 1 : -1; let s = sel < 0 ? (d > 0 ? -1 : N) : sel;
+  for (let k = 0; k < N; k++) { s = (s + d + N) % N; if (match[s]) { select(s); return; } }
+});
+new ResizeObserver(resize).observe($('#stage'));
+addEventListener('resize', resize);
+$('#ph').textContent = PH_DEFAULT; $('#ph').appendChild(el('small', null, 'HOVER A SIGNAL TO TRACE IT'));
+setModeUI(); resize(); requestAnimationFrame(frame); boot();
+})();
+</script>
+</body>
+</html>
